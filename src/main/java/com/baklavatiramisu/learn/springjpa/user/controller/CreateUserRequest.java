@@ -1,4 +1,4 @@
-package com.baklavatiramisu.learn.springjpa.controller.user;
+package com.baklavatiramisu.learn.springjpa.user.controller;
 
 import jakarta.validation.constraints.NotBlank;
 
