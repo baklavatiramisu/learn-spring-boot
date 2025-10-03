@@ -26,11 +26,7 @@ public class JpaUserService implements UserService {
 
     @Override
     public UserEntity getUserById(long id) {
-        final UserEntity user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-        if (user.getDeletedOn() != null) {
-            throw new UserNotFoundException(id);
-        }
-        return user;
+        return userRepository.findExistingUserById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
