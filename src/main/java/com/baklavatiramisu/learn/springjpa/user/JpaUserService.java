@@ -42,5 +42,6 @@ public class JpaUserService implements UserService {
     public void deleteUser(long id) {
         UserEntity user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         user.setDeletedOn(OffsetDateTime.now());
+        userRepository.save(user);
     }
 }
