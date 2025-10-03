@@ -1,22 +1,50 @@
-package com.baklavatiramisu.learn.springjpa.dto;
+package com.baklavatiramisu.learn.springjpa.status;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.baklavatiramisu.learn.springjpa.user.UserEntity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.OffsetDateTime;
 
-@Entity(name = "users")
-public class User {
+@Entity(name = "Status")
+@Table(name = "status_updates")
+public class StatusEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
-    private String handle;
+    @ManyToOne
+    private UserEntity user;
+    @NotBlank
+    @Max(500)
+    private String status;
     private OffsetDateTime createdOn;
     private OffsetDateTime updatedOn;
     private OffsetDateTime deletedOn;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public UserEntity getUser() {
+        return user;
+    }
+
+    public void setUser(UserEntity user) {
+        this.user = user;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public OffsetDateTime getCreatedOn() {
         return createdOn;
@@ -44,37 +72,13 @@ public class User {
 
     @Override
     public String toString() {
-        return "User{" +
+        return "StatusEntity{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
-                ", handle='" + handle + '\'' +
+                ", user=" + user +
+                ", status='" + status + '\'' +
                 ", createdOn=" + createdOn +
                 ", updatedOn=" + updatedOn +
                 ", deletedOn=" + deletedOn +
                 '}';
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getHandle() {
-        return handle;
-    }
-
-    public void setHandle(String handle) {
-        this.handle = handle;
     }
 }

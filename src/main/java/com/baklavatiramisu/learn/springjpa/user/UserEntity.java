@@ -1,25 +1,25 @@
-package com.baklavatiramisu.learn.springjpa.dto;
+package com.baklavatiramisu.learn.springjpa.user;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
 
-@Entity(name = "posts")
-public class Post {
+@Entity(name = "User")
+@Table(name = "users")
+public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String content;
-    @ManyToOne
-    private User user;
+    @Size(min = 2)
+    private String name;
+    @Size(min = 4, max = 16)
+    @HandleValidation
+    @Column(unique = true)
+    private String handle;
     private OffsetDateTime createdOn;
     private OffsetDateTime updatedOn;
     private OffsetDateTime deletedOn;
-
-    @Override
-    public String toString() {
-        return "Post{" + "id=" + id + ", content='" + content + '\'' + ", user=" + user + ", createdOn=" + createdOn + ", updatedOn=" + updatedOn + ", deletedOn=" + deletedOn + '}';
-    }
 
     public OffsetDateTime getCreatedOn() {
         return createdOn;
@@ -45,6 +45,18 @@ public class Post {
         this.deletedOn = deletedOn;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", handle='" + handle + '\'' +
+                ", createdOn=" + createdOn +
+                ", updatedOn=" + updatedOn +
+                ", deletedOn=" + deletedOn +
+                '}';
+    }
+
     public Long getId() {
         return id;
     }
@@ -53,19 +65,20 @@ public class Post {
         this.id = id;
     }
 
-    public String getContent() {
-        return content;
+    public String getName() {
+        return name;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public User getUser() {
-        return user;
+    public String getHandle() {
+        return handle;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setHandle(String handle) {
+        this.handle = handle;
     }
 }
+

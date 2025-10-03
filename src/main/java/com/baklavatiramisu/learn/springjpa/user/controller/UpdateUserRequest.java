@@ -1,4 +1,4 @@
-package com.baklavatiramisu.learn.springjpa.controller.user;
+package com.baklavatiramisu.learn.springjpa.user.controller;
 
 public record UpdateUserRequest(String name, String handle) {
     @Override
