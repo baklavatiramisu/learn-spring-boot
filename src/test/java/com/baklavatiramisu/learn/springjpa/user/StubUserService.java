@@ -5,21 +5,19 @@ import org.springframework.boot.test.context.TestComponent;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @TestComponent
 public class StubUserService implements UserService {
     private final List<UserEntity> userEntityList = new ArrayList<>();
     private long id = 1L;
-
     public StubUserService() {
         super();
-        UserEntity testUser = new UserEntity();
-        testUser.setId(1L);
-        testUser.setName("Test Stub User");
-        testUser.setHandle("teststubuser");
-        testUser.setCreatedOn(OffsetDateTime.now());
-        testUser.setUpdatedOn(OffsetDateTime.now());
-        userEntityList.add(testUser);
+        createUser("Test Stub User", "teststubuser");
+    }
+
+    public Optional<UserEntity> findUserById(long id) {
+        return userEntityList.stream().filter(u -> u.getId() == id).findFirst();
     }
 
     @Override
@@ -36,7 +34,10 @@ public class StubUserService implements UserService {
 
     @Override
     public UserEntity getUserById(long id) {
-        return userEntityList.stream().filter(a -> id == a.getId()).findFirst().orElseThrow(() -> new UserNotFoundException(id));
+        return userEntityList.stream()
+                .filter(a -> id == a.getId() && a.getDeletedOn() == null)
+                .findFirst()
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
@@ -49,6 +50,10 @@ public class StubUserService implements UserService {
 
     @Override
     public void deleteUser(long id) {
-        userEntityList.removeIf(u -> id == u.getId());
+        UserEntity user = userEntityList.stream()
+                .filter(u -> u.getId() == id)
+                .findFirst()
+                .orElseThrow(() -> new UserNotFoundException(id));
+        user.setDeletedOn(OffsetDateTime.now());
     }
 }
