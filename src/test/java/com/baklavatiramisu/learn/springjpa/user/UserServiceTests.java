@@ -17,7 +17,7 @@ public class UserServiceTests {
 
     @Test
     @DisplayName("Test getUserById will return correct user from database")
-    void testGetUserByIdWillReturnCorrectUserFromDatabase() {
+    void testGetUserByIdMethodWillReturnCorrectUserFromDatabase() {
         UserEntity user = userService.getUserById(1);
         Assertions.assertEquals(1L, user.getId());
         Assertions.assertEquals("baklava tiramisu", user.getName());

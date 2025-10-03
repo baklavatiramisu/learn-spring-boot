@@ -26,7 +26,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test /users/{userId}/statuses/{statusesId} with existing user ID and status ID will return correct data")
-    void testSingleStatusEndpointWillReturnCorrectStatus() throws Exception {
+    void testGetStatusByIdMethodWillReturnCorrectStatus() throws Exception {
         final UserEntity user = new UserEntity();
         user.setId(10001L);
         user.setName("Mock User");

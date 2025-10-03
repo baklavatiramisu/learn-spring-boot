@@ -17,7 +17,7 @@ public class StatusServiceTests {
 
     @Test
     @DisplayName("Test getStatusById to return correct status")
-    void testGetStatusByIdToReturnCorrectStatus() {
+    void testGetStatusByIdMethodWillReturnCorrectStatus() {
         StatusEntity status = statusService.getStatusById(1L, 1L);
         Assertions.assertEquals(1L, status.getId());
         Assertions.assertEquals("Hello, World!", status.getStatus());

@@ -25,7 +25,7 @@ public class UserControllerTests {
 
     @Test
     @DisplayName("Test /users/{id} will return contact UserService for a UserEntity and returns it")
-    void testUsersIdEndpointWillReturnCorrectUser() throws Exception {
+    void testGetUserByIdMethodWillReturnCorrectUser() throws Exception {
         UserEntity testUser = new UserEntity();
         testUser.setId(1L);
         testUser.setName("Test User");

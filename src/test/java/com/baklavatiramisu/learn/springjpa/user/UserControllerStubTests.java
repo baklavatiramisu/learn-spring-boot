@@ -19,7 +19,7 @@ public class UserControllerStubTests {
 
     @Test
     @DisplayName("Test /users/{id} will contact StubUserService for a UserEntity and returns it")
-    public void testFoo() throws Exception {
+    public void testGetUserByIdMethodWillContactStubUserServiceAndReturnsCorrectData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", 1L))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.handle").value("teststubuser"));

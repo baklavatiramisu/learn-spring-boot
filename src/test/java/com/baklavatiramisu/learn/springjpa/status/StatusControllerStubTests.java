@@ -20,7 +20,7 @@ public class StatusControllerStubTests {
 
     @Test
     @DisplayName("Test /users/{userId}/statuses/{statusId} will contact StubStatusService for a StatusEntity and returns it")
-    void foo() throws Exception {
+    void testGetStatusByIdMethodWillContactStubStatusServiceAndReturnsCorrectData() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}/statuses/{statusId}", 1L, 1L))
                 .andExpect(MockMvcResultMatchers.status().is(200))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1L))
