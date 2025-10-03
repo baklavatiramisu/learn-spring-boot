@@ -34,13 +34,15 @@ public class UserController {
 
     // update
     @PutMapping("/users/{userId}")
-    public void updateUserById(@PathVariable("userId") final long userId, @Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<Void> updateUserById(@PathVariable("userId") final long userId, @Valid @RequestBody UpdateUserRequest request) {
         userService.updateUser(userId, request.name(), request.handle());
+        return ResponseEntity.noContent().build();
     }
 
     // delete
     @DeleteMapping("/users/{userId}")
-    public void deleteUserById(@PathVariable("userId") final long userId) {
+    public ResponseEntity<Void> deleteUserById(@PathVariable("userId") final long userId) {
         userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 }
