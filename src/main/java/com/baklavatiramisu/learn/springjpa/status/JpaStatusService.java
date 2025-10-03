@@ -39,24 +39,34 @@ public class JpaStatusService implements StatusService {
     }
 
     @Override
-    public StatusEntity getStatusById(long statusId) {
-        return statusRepository.findById(statusId).orElseThrow(() -> new StatusNotFoundException(statusId));
+    public StatusEntity getStatusById(final long userId, final long statusId) {
+        final StatusEntity status = statusRepository.findById(statusId).orElseThrow(() -> new StatusNotFoundException(statusId));
+        if (userId != status.getUser().getId()) {
+            throw new StatusNotFoundException(statusId);
+        }
+        return status;
     }
 
     @Override
-    public void updateStatus(final long statusId, final String status) {
+    public void updateStatus(final long userId, final long statusId, final String status) {
         if (status == null || status.isBlank()) {
             throw new IllegalStateException("Status cannot be blank");
         }
         final StatusEntity statusEntity = statusRepository.findById(statusId).orElseThrow(() -> new StatusNotFoundException(statusId));
+        if (userId != statusEntity.getUser().getId()) {
+            throw new StatusNotFoundException(statusId);
+        }
         statusEntity.setStatus(status);
         statusEntity.setUpdatedOn(OffsetDateTime.now());
         statusRepository.save(statusEntity);
     }
 
     @Override
-    public void deleteStatus(long statusId) {
+    public void deleteStatus(long userId, long statusId) {
         final StatusEntity statusEntity = statusRepository.findById(statusId).orElseThrow(() -> new StatusNotFoundException(statusId));
+        if (userId != statusEntity.getUser().getId()) {
+            throw new StatusNotFoundException(statusId);
+        }
         statusEntity.setDeletedOn(OffsetDateTime.now());
     }
 }

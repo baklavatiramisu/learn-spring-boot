@@ -7,9 +7,9 @@ public interface StatusService {
 
     List<StatusEntity> getAllStatus(long userId);
 
-    StatusEntity getStatusById(long statusId);
+    StatusEntity getStatusById(long userId, long statusId);
 
-    void updateStatus(long statusId, String status);
+    void updateStatus(long userId, long statusId, String status);
 
-    void deleteStatus(long statusId);
+    void deleteStatus(long userId, long statusId);
 }

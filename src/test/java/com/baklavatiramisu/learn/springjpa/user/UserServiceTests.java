@@ -1,6 +1,6 @@
 package com.baklavatiramisu.learn.springjpa.user;
 
-import com.baklavatiramisu.learn.springjpa.DataSourceConfiguration;
+import com.baklavatiramisu.learn.springjpa.EmbeddedDataSourceConfiguration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 @SpringBootTest
-@Import({DataSourceConfiguration.class})
+@Import(EmbeddedDataSourceConfiguration.class)
+@DisplayName("UserService tests with H2 embedded datasource")
 public class UserServiceTests {
     @Autowired
     private UserService userService;
