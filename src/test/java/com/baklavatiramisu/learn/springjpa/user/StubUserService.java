@@ -11,6 +11,7 @@ import java.util.Optional;
 public class StubUserService implements UserService {
     private final List<UserEntity> userEntityList = new ArrayList<>();
     private long id = 1L;
+
     public StubUserService() {
         super();
         createUser("Test Stub User", "teststubuser");

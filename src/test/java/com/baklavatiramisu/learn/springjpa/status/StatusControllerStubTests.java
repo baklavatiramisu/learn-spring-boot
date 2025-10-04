@@ -3,6 +3,7 @@ package com.baklavatiramisu.learn.springjpa.status;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusController;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -13,10 +14,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @WebMvcTest(StatusController.class)
 @Import(StubStatusService.class)
@@ -47,11 +51,34 @@ public class StatusControllerStubTests {
     }
 
     @Test
+    @DisplayName("Test GET /users/{userId}/statuses will fetch all statuses by the user")
+    void testGetAllStatuses() throws Exception {
+        final MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/users/{userId}/statuses", 1L)
+                                .queryParam("size", "5")
+                                .queryParam("page", "0")
+                                .queryParam("sort", "created_on,desc")
+                )
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(5))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.size").value(5))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").value(10))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(2))
+                .andReturn();
+        final String response = result.getResponse().getContentAsString();
+        final List<String> timestamps = JsonPath.parse(response).read("$.content[*].created_on");
+        // Ensure the list is sorted in descending order
+        Assertions.assertEquals(timestamps.stream().sorted().toList().reversed(), timestamps);
+    }
+
+    @Test
     @DisplayName("Test POST /users/{userId}/statuses will create a status associated to the user")
     @DirtiesContext
     void testCreateStatus() throws Exception {
         final long userId = 1L;
-        final long statusId = 2L;
+        final long statusId = 11L;
         final String status = "Hello, World!";
 
         mockMvc.perform(

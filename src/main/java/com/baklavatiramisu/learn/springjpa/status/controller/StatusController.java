@@ -3,13 +3,16 @@ package com.baklavatiramisu.learn.springjpa.status.controller;
 import com.baklavatiramisu.learn.springjpa.status.StatusEntity;
 import com.baklavatiramisu.learn.springjpa.status.StatusService;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 public class StatusController {
@@ -36,8 +39,9 @@ public class StatusController {
 
     // get all status of a user
     @GetMapping("/users/{userId}/statuses")
-    public List<StatusResponse> getAllStatuses(@PathVariable("userId") final long userId) {
-        return statusService.getAllStatus(userId).stream().map(StatusResponse::fromStatusEntity).toList();
+    public PagedModel<StatusResponse> getAllStatuses(@PathVariable("userId") final long userId, @RequestParam(value = "query", required = false) String query, Pageable pageable) {
+        final Page<StatusResponse> page = statusService.getAllStatus(userId, query, pageable).map(StatusResponse::fromStatusEntity);
+        return new PagedModel<>(page);
     }
 
     // update

@@ -10,14 +10,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @WebMvcTest(StatusController.class)
 @DisplayName("StatusController tests with mocked StatusService dependency")
@@ -55,6 +58,48 @@ public class StatusControllerTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.createdOn").value(status.getCreatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.updatedOn").value(status.getUpdatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         BDDMockito.verify(statusService).getStatusById(1L, 1L);
+    }
+
+    @Test
+    @DisplayName("Test GET /users/{userId}/statuses will fetch all statuses by the user")
+    void testGetAllStatuses() throws Exception {
+        final long userId = 10001L;
+        final long statusId = 10001L;
+        final String searchQuery = "foo";
+        final UserEntity user = new UserEntity();
+        user.setId(userId);
+        user.setName("Mock User");
+        user.setHandle("mockuser");
+        user.setCreatedOn(OffsetDateTime.now());
+        user.setUpdatedOn(OffsetDateTime.now());
+        final StatusEntity status = new StatusEntity();
+        status.setId(statusId);
+        status.setUser(user);
+        status.setStatus("Hello, Mocked World!");
+        status.setCreatedOn(OffsetDateTime.now());
+        status.setUpdatedOn(OffsetDateTime.now());
+        Pageable paginationRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "created_on"));
+        Page<StatusEntity> response = new PageImpl<>(List.of(status), paginationRequest, 1L);
+
+        BDDMockito.given(statusService.getAllStatus(userId, searchQuery, paginationRequest)).willReturn(response);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/users/{userId}/statuses", userId)
+                        .queryParam("size", "10")
+                        .queryParam("page", "0")
+                        .queryParam("sort", "created_on,desc")
+                        .queryParam("query", "foo")
+        )
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.size").value(10))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(1))
+                .andDo(MockMvcResultHandlers.print());
+
+        BDDMockito.verify(statusService).getAllStatus(userId, searchQuery, paginationRequest);
     }
 
     @Test

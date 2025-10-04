@@ -11,9 +11,6 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 @SpringBootTest
 @Import(EmbeddedDataSourceConfiguration.class)
