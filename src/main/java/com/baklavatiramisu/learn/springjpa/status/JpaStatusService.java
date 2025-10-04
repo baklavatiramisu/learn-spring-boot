@@ -68,5 +68,6 @@ public class JpaStatusService implements StatusService {
             throw new StatusNotFoundException(statusId);
         }
         statusEntity.setDeletedOn(OffsetDateTime.now());
+        statusRepository.save(statusEntity);
     }
 }
