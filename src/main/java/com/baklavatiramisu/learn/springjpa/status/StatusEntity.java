@@ -2,8 +2,8 @@ package com.baklavatiramisu.learn.springjpa.status;
 
 import com.baklavatiramisu.learn.springjpa.user.UserEntity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.OffsetDateTime;
 
@@ -16,7 +16,7 @@ public class StatusEntity {
     @ManyToOne
     private UserEntity user;
     @NotBlank
-    @Max(500)
+    @Size(max = 500)
     private String status;
     private OffsetDateTime createdOn;
     private OffsetDateTime updatedOn;

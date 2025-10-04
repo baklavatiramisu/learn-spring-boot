@@ -46,12 +46,17 @@ public class StubStatusService implements StatusService {
 
     @Override
     public List<StatusEntity> getAllStatus(long userId) {
-        return statuses.stream().filter(s -> s.getUser().getId() == userId).toList();
+        return statuses.stream()
+                .filter(s -> s.getUser().getId() == userId && s.getDeletedOn() == null)
+                .toList();
     }
 
     @Override
     public StatusEntity getStatusById(long userId, long statusId) {
-        return statuses.stream().filter(s -> s.getUser().getId() == userId && s.getId() == statusId).findFirst().orElseThrow(() -> new StatusNotFoundException(statusId));
+        return statuses.stream()
+                .filter(s -> s.getUser().getId() == userId && s.getId() == statusId && s.getDeletedOn() == null)
+                .findFirst()
+                .orElseThrow(() -> new StatusNotFoundException(statusId));
     }
 
     @Override
@@ -63,6 +68,14 @@ public class StubStatusService implements StatusService {
 
     @Override
     public void deleteStatus(long userId, long statusId) {
-        statuses.removeIf(s -> s.getUser().getId() == userId && s.getId() == statusId);
+        StatusEntity entity = getStatusById(userId, statusId);
+        entity.setDeletedOn(OffsetDateTime.now());
+    }
+
+    public StatusEntity findStatusById(final long statusId) {
+        return statuses.stream()
+                .filter(s -> s.getId() == statusId)
+                .findFirst()
+                .orElseThrow(() -> new StatusNotFoundException(statusId));
     }
 }
