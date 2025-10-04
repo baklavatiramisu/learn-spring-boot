@@ -1,11 +1,12 @@
 package com.baklavatiramisu.learn.springjpa.status;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface StatusService {
     StatusEntity createStatus(long userId, String status);
 
-    List<StatusEntity> getAllStatus(long userId);
+    Page<StatusEntity> getAllStatus(long userId, String query, Pageable pageable);
 
     StatusEntity getStatusById(long userId, long statusId);
 

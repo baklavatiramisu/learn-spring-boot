@@ -2,11 +2,11 @@ package com.baklavatiramisu.learn.springjpa.status;
 
 import com.baklavatiramisu.learn.springjpa.user.UserEntity;
 import com.baklavatiramisu.learn.springjpa.user.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Service
 public class JpaStatusService implements StatusService {
@@ -34,8 +34,12 @@ public class JpaStatusService implements StatusService {
     }
 
     @Override
-    public List<StatusEntity> getAllStatus(final long userId) {
-        return StreamSupport.stream(statusRepository.findAllStatusByUserId(userId).spliterator(), false).toList();
+    public Page<StatusEntity> getAllStatus(long userId, String query, Pageable pageable) {
+        if (query == null || query.isBlank()) {
+            return statusRepository.findAllStatusByUserId(userId, pageable);
+        } else {
+            return statusRepository.findAllStatusByUserIdWithSearch(userId, query, pageable);
+        }
     }
 
     @Override
