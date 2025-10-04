@@ -3,6 +3,7 @@ package com.baklavatiramisu.learn.springjpa.status.controller;
 import com.baklavatiramisu.learn.springjpa.status.StatusEntity;
 import com.baklavatiramisu.learn.springjpa.status.StatusService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -41,12 +42,14 @@ public class StatusController {
 
     // update
     @PutMapping("/users/{userId}/statuses/{statusId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateStatus(@PathVariable("userId") final long userId, @PathVariable("statusId") final long statusId, @RequestBody final StatusRequest request) {
         statusService.updateStatus(userId, statusId, request.status());
     }
 
     // delete
     @DeleteMapping("/users/{userId}/statuses/{statusId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteStatus(@PathVariable("userId") final long userId, @PathVariable("statusId") final long statusId) {
         statusService.deleteStatus(userId, statusId);
     }

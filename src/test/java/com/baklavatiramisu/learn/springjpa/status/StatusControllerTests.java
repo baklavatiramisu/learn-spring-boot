@@ -1,12 +1,16 @@
 package com.baklavatiramisu.learn.springjpa.status;
 
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusController;
+import com.baklavatiramisu.learn.springjpa.status.controller.StatusRequest;
 import com.baklavatiramisu.learn.springjpa.user.UserEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -24,9 +28,12 @@ public class StatusControllerTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    @DisplayName("Test /users/{userId}/statuses/{statusesId} with existing user ID and status ID will return correct data")
-    void testGetStatusByIdMethodWillReturnCorrectStatus() throws Exception {
+    @DisplayName("Test GET /users/{userId}/statuses/{statusId} will fetch the correct status that belongs to the user")
+    void testGetStatus() throws Exception {
         final UserEntity user = new UserEntity();
         user.setId(10001L);
         user.setName("Mock User");
@@ -48,5 +55,69 @@ public class StatusControllerTests {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.createdOn").value(status.getCreatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.updatedOn").value(status.getUpdatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
         BDDMockito.verify(statusService).getStatusById(1L, 1L);
+    }
+
+    @Test
+    @DisplayName("Test POST /users/{userId}/statuses will create a status associated to the user")
+    void testCreateStatus() throws Exception {
+        final long userId = 10001L;
+        final long statusId = 20001L;
+        final String status = "Hello, World!";
+
+        final UserEntity userEntity = new UserEntity();
+        userEntity.setId(userId);
+        userEntity.setName("Mock User");
+        userEntity.setHandle("mockuser");
+        userEntity.setCreatedOn(OffsetDateTime.now());
+        userEntity.setUpdatedOn(OffsetDateTime.now());
+
+        final StatusEntity statusEntity = new StatusEntity();
+        statusEntity.setId(statusId);
+        statusEntity.setUser(userEntity);
+        statusEntity.setStatus("Hello, Mocked World!");
+        statusEntity.setCreatedOn(OffsetDateTime.now());
+        statusEntity.setUpdatedOn(OffsetDateTime.now());
+
+        BDDMockito.given(statusService.createStatus(userId, status)).willReturn(statusEntity);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/users/{userId}/statuses", userId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new StatusRequest(status)))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpectAll(
+                MockMvcResultMatchers.status().isCreated(),
+                MockMvcResultMatchers.header().string("location", Matchers.endsWith(String.format("/users/%d/statuses/%d", userId, statusId)))
+        );
+
+        BDDMockito.verify(statusService).createStatus(userId, status);
+    }
+
+    @Test
+    @DisplayName("Test PUT /users/{userId}/statuses/{statusId} will update the status associated to the user")
+    void testUpdateStatus() throws Exception {
+        final long userId = 10001L;
+        final long statusId = 20001L;
+        final String status = "Hello, World!";
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/users/{userId}/statuses/{statusId}", userId, statusId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new StatusRequest(status)))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        BDDMockito.verify(statusService).updateStatus(userId, statusId, status);
+    }
+
+    @Test
+    @DisplayName("Test DELETE /users/{userId}/statuses/{statusId} will mark the status as deleted")
+    void testDeleteStatus() throws Exception {
+        final long userId = 10001L;
+        final long statusId = 20001L;
+        mockMvc.perform(MockMvcRequestBuilders.delete("/users/{userId}/statuses/{statusId}", userId, statusId))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        BDDMockito.verify(statusService).deleteStatus(userId, statusId);
     }
 }
