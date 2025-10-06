@@ -1,0 +1,141 @@
+package com.baklavatiramisu.learn.springboot.status;
+
+import com.baklavatiramisu.learn.springboot.ApplicationSecurityConfig;
+import com.baklavatiramisu.learn.springboot.status.controller.StatusController;
+import com.baklavatiramisu.learn.springboot.status.controller.StatusRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+@WebMvcTest(StatusController.class)
+@Import({StubStatusService.class, ApplicationSecurityConfig.class})
+@DisplayName("StatusController tests with stub implementation of StatusService dependency")
+public class StatusControllerStubTests {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private StubStatusService statusService;
+
+    @Test
+    @DisplayName("Test GET /users/{userId}/statuses/{statusId} will fetch the correct status that belongs to the user")
+    @WithMockUser(roles = "status:read")
+    void testGetStatus() throws Exception {
+        final long userId = 1L;
+        final long statusId = 1L;
+        final StatusEntity status = statusService.getStatusById(userId, statusId);
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}/statuses/{statusId}", userId, statusId))
+                .andExpect(MockMvcResultMatchers.status().is(200))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(status.getId()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.status").value(status.getStatus()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.createdOn").value(status.getCreatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.updatedOn").value(status.getUpdatedOn().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+    }
+
+    @Test
+    @DisplayName("Test GET /users/{userId}/statuses will fetch all statuses by the user")
+    @WithMockUser(roles = "status:read")
+    void testGetAllStatuses() throws Exception {
+        final MvcResult result = mockMvc.perform(
+                        MockMvcRequestBuilders.get("/users/{userId}/statuses", 1L)
+                                .queryParam("size", "5")
+                                .queryParam("page", "0")
+                                .queryParam("sort", "created_on,desc")
+                )
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(5))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.size").value(5))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.number").value(0))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalElements").value(10))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.page.totalPages").value(2))
+                .andReturn();
+        final String response = result.getResponse().getContentAsString();
+        final List<String> timestamps = JsonPath.parse(response).read("$.content[*].created_on");
+        // Ensure the list is sorted in descending order
+        Assertions.assertEquals(timestamps.stream().sorted().toList().reversed(), timestamps);
+    }
+
+    @Test
+    @DisplayName("Test POST /users/{userId}/statuses will create a status associated to the user")
+    @DirtiesContext
+    @WithMockUser(roles = "status:write")
+    void testCreateStatus() throws Exception {
+        final long userId = 1L;
+        final long statusId = 11L;
+        final String status = "Hello, World!";
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/users/{userId}/statuses", userId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new StatusRequest(status)))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpectAll(
+                MockMvcResultMatchers.status().isCreated(),
+                MockMvcResultMatchers.header().string("location", Matchers.endsWith(String.format("/users/%d/statuses/%d", userId, statusId)))
+        );
+        final StatusEntity entity = statusService.getStatusById(userId, statusId);
+        Assertions.assertEquals(userId, entity.getUser().getId());
+        Assertions.assertEquals(statusId, entity.getId());
+        Assertions.assertEquals(status, entity.getStatus());
+    }
+
+    @Test
+    @DisplayName("Test PUT /users/{userId}/statuses/{statusId} will update the status associated to the user")
+    @DirtiesContext
+    @WithMockUser(roles = "status:write")
+    void testUpdateStatus() throws Exception {
+        final long userId = 1L;
+        final long statusId = 1L;
+        final String status = "Hello, World!";
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/users/{userId}/statuses/{statusId}", userId, statusId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new StatusRequest(status)))
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        final StatusEntity entity = statusService.findStatusById(statusId);
+        Assertions.assertEquals(statusId, entity.getId());
+        Assertions.assertEquals(userId, entity.getUser().getId());
+        Assertions.assertEquals(status, entity.getStatus());
+    }
+
+    @Test
+    @DisplayName("Test DELETE /users/{userId}/statuses/{statusId} will mark the status as deleted")
+    @DirtiesContext
+    @WithMockUser(roles = "status:write")
+    void testDeleteStatus() throws Exception {
+        final long userId = 1L;
+        final long statusId = 1L;
+        mockMvc.perform(MockMvcRequestBuilders.delete("/users/{userId}/statuses/{statusId}", userId, statusId))
+                .andExpect(MockMvcResultMatchers.status().isNoContent());
+
+        final StatusEntity entity = statusService.findStatusById(statusId);
+        Assertions.assertEquals(statusId, entity.getId());
+        Assertions.assertEquals(userId, entity.getUser().getId());
+        Assertions.assertNotNull(entity.getDeletedOn());
+    }
+}
