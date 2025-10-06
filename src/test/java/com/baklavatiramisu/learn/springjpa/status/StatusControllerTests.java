@@ -1,5 +1,6 @@
 package com.baklavatiramisu.learn.springjpa.status;
 
+import com.baklavatiramisu.learn.springjpa.ApplicationSecurityConfig;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusController;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusRequest;
 import com.baklavatiramisu.learn.springjpa.user.UserEntity;
@@ -10,8 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -24,6 +27,7 @@ import java.util.List;
 
 @WebMvcTest(StatusController.class)
 @DisplayName("StatusController tests with mocked StatusService dependency")
+@Import(ApplicationSecurityConfig.class)
 public class StatusControllerTests {
     @MockitoBean
     private StatusService statusService;
@@ -36,6 +40,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test GET /users/{userId}/statuses/{statusId} will fetch the correct status that belongs to the user")
+    @WithMockUser(roles = "status:read")
     void testGetStatus() throws Exception {
         final UserEntity user = new UserEntity();
         user.setId(10001L);
@@ -62,6 +67,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test GET /users/{userId}/statuses will fetch all statuses by the user")
+    @WithMockUser(roles = "status:read")
     void testGetAllStatuses() throws Exception {
         final long userId = 10001L;
         final long statusId = 10001L;
@@ -84,12 +90,12 @@ public class StatusControllerTests {
         BDDMockito.given(statusService.getAllStatus(userId, searchQuery, paginationRequest)).willReturn(response);
 
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/users/{userId}/statuses", userId)
-                        .queryParam("size", "10")
-                        .queryParam("page", "0")
-                        .queryParam("sort", "created_on,desc")
-                        .queryParam("query", "foo")
-        )
+                        MockMvcRequestBuilders.get("/users/{userId}/statuses", userId)
+                                .queryParam("size", "10")
+                                .queryParam("page", "0")
+                                .queryParam("sort", "created_on,desc")
+                                .queryParam("query", "foo")
+                )
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(1))
@@ -104,6 +110,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test POST /users/{userId}/statuses will create a status associated to the user")
+    @WithMockUser(roles = "status:write")
     void testCreateStatus() throws Exception {
         final long userId = 10001L;
         final long statusId = 20001L;
@@ -140,6 +147,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test PUT /users/{userId}/statuses/{statusId} will update the status associated to the user")
+    @WithMockUser(roles = "status:write")
     void testUpdateStatus() throws Exception {
         final long userId = 10001L;
         final long statusId = 20001L;
@@ -157,6 +165,7 @@ public class StatusControllerTests {
 
     @Test
     @DisplayName("Test DELETE /users/{userId}/statuses/{statusId} will mark the status as deleted")
+    @WithMockUser(roles = "status:write")
     void testDeleteStatus() throws Exception {
         final long userId = 10001L;
         final long statusId = 20001L;

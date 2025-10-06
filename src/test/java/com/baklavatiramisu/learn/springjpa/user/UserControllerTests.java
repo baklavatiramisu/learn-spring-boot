@@ -1,5 +1,6 @@
 package com.baklavatiramisu.learn.springjpa.user;
 
+import com.baklavatiramisu.learn.springjpa.ApplicationSecurityConfig;
 import com.baklavatiramisu.learn.springjpa.user.controller.CreateUserRequest;
 import com.baklavatiramisu.learn.springjpa.user.controller.UserController;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -20,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 
 @WebMvcTest(UserController.class)
 @DisplayName("UserController tests with mocked UserService dependency")
+@Import(ApplicationSecurityConfig.class)
 public class UserControllerTests {
     @MockitoBean
     private UserService userService;
@@ -32,6 +36,7 @@ public class UserControllerTests {
 
     @Test
     @DisplayName("Test GET /users/{id} will return contact UserService for a UserEntity and returns it")
+    @WithMockUser(roles = "user:read")
     void testQueryUserUseCase() throws Exception {
         UserEntity testUser = new UserEntity();
         testUser.setId(1L);
@@ -54,6 +59,7 @@ public class UserControllerTests {
 
     @Test
     @DisplayName("Test POST /users will call createUser in UserService")
+    @WithMockUser(roles = "admin")
     void testCreateUserUseCase() throws Exception {
         final String handle = "testuser";
         final String name = "Test User";
@@ -81,6 +87,7 @@ public class UserControllerTests {
 
     @Test
     @DisplayName("Test PUT /users/{id} endpoint will correctly call updateUser method in UserService")
+    @WithMockUser(roles = "user:write")
     void testUpdateUserUseCase() throws Exception {
         final String handle = "testuser";
         final String name = "Test User";
@@ -99,6 +106,7 @@ public class UserControllerTests {
 
     @Test
     @DisplayName("Test DELETE /users/{id} endpoint will correctly call deleteUser method in UserService")
+    @WithMockUser(roles = "admin")
     void testDeleteUserUseCase() throws Exception {
         final long id = 1L;
         mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", id)).andExpect(MockMvcResultMatchers.status().is(204));
