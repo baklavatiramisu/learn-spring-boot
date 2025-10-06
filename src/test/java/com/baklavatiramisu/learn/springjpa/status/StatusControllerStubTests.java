@@ -1,5 +1,6 @@
 package com.baklavatiramisu.learn.springjpa.status;
 
+import com.baklavatiramisu.learn.springjpa.ApplicationSecurityConfig;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusController;
 import com.baklavatiramisu.learn.springjpa.status.controller.StatusRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -23,7 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebMvcTest(StatusController.class)
-@Import(StubStatusService.class)
+@Import({StubStatusService.class, ApplicationSecurityConfig.class})
 @DisplayName("StatusController tests with stub implementation of StatusService dependency")
 public class StatusControllerStubTests {
 
@@ -38,6 +40,7 @@ public class StatusControllerStubTests {
 
     @Test
     @DisplayName("Test GET /users/{userId}/statuses/{statusId} will fetch the correct status that belongs to the user")
+    @WithMockUser(roles = "status:read")
     void testGetStatus() throws Exception {
         final long userId = 1L;
         final long statusId = 1L;
@@ -52,6 +55,7 @@ public class StatusControllerStubTests {
 
     @Test
     @DisplayName("Test GET /users/{userId}/statuses will fetch all statuses by the user")
+    @WithMockUser(roles = "status:read")
     void testGetAllStatuses() throws Exception {
         final MvcResult result = mockMvc.perform(
                         MockMvcRequestBuilders.get("/users/{userId}/statuses", 1L)
@@ -76,6 +80,7 @@ public class StatusControllerStubTests {
     @Test
     @DisplayName("Test POST /users/{userId}/statuses will create a status associated to the user")
     @DirtiesContext
+    @WithMockUser(roles = "status:write")
     void testCreateStatus() throws Exception {
         final long userId = 1L;
         final long statusId = 11L;
@@ -99,6 +104,7 @@ public class StatusControllerStubTests {
     @Test
     @DisplayName("Test PUT /users/{userId}/statuses/{statusId} will update the status associated to the user")
     @DirtiesContext
+    @WithMockUser(roles = "status:write")
     void testUpdateStatus() throws Exception {
         final long userId = 1L;
         final long statusId = 1L;
@@ -120,6 +126,7 @@ public class StatusControllerStubTests {
     @Test
     @DisplayName("Test DELETE /users/{userId}/statuses/{statusId} will mark the status as deleted")
     @DirtiesContext
+    @WithMockUser(roles = "status:write")
     void testDeleteStatus() throws Exception {
         final long userId = 1L;
         final long statusId = 1L;

@@ -1,5 +1,6 @@
 package com.baklavatiramisu.learn.springjpa.user;
 
+import com.baklavatiramisu.learn.springjpa.ApplicationSecurityConfig;
 import com.baklavatiramisu.learn.springjpa.user.controller.CreateUserRequest;
 import com.baklavatiramisu.learn.springjpa.user.controller.UserController;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -19,7 +21,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.Optional;
 
 @WebMvcTest(UserController.class)
-@Import(StubUserService.class)
+@Import({StubUserService.class, ApplicationSecurityConfig.class})
 @DisplayName("UserController tests with stub implementation of UserService dependency")
 public class UserControllerStubTests {
     @Autowired
@@ -33,6 +35,7 @@ public class UserControllerStubTests {
 
     @Test
     @DisplayName("Test /users/{id} will contact StubUserService for a UserEntity and returns it")
+    @WithMockUser(roles = "user:read")
     public void testQueryUserUseCase() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/users/{id}", 1L))
                 .andExpect(MockMvcResultMatchers.status().is(200))
@@ -42,6 +45,7 @@ public class UserControllerStubTests {
     @Test
     @DisplayName("Test POST /users will call createUser in StubUserService")
     @DirtiesContext
+    @WithMockUser(roles = "admin")
     void testCreateUserUseCase() throws Exception {
         final String handle = "testuser";
         final String name = "Test User";
@@ -65,6 +69,7 @@ public class UserControllerStubTests {
 
     @Test
     @DisplayName("Test PUT /users/{id} endpoint will correctly call updateUser method in StubUserService")
+    @WithMockUser(roles = "user:write")
     void testUpdateUserUseCase() throws Exception {
         final String handle = "testuser";
         final String name = "Test User";
@@ -88,6 +93,7 @@ public class UserControllerStubTests {
 
     @Test
     @DisplayName("Test DELETE /users/{id} endpoint will correctly call deleteUser method in StubUserService")
+    @WithMockUser(roles = "admin")
     void testDeleteUserUseCase() throws Exception {
         final long id = 1L;
         mockMvc.perform(MockMvcRequestBuilders.delete("/users/{id}", id)).andExpect(MockMvcResultMatchers.status().is(204));
